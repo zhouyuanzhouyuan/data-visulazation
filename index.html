@@ -1,0 +1,104 @@
+<DATATYPE html>
+<html>
+<meta charset="utf-8">
+<head>
+	<script src="./lib/d3.v3.min.js"></script>
+	<script src="./lib/dimple.v2.0.0.min.js"></script>
+	<style>
+	h2{
+		text-align: center;
+	}
+	</style>
+	<script type="text/javascript">
+
+	function draw(data)
+	{
+		 "use strict";
+     // add title for chart
+		 d3.select("body")
+		 .append("h2")
+		 .text("different performece of baseball player")
+     //add svg for chart
+		 var svg=d3.select("body")
+		           .append("svg")
+		           .attr("width",1200)
+		           .attr("height",800)
+		           .append("g")
+		           .attr("class","chart");
+      //add the main storyboard for chart
+		 var indicator=new dimple.chart(svg,data);
+		 var defaultColor=indicator.defaultColors[0];
+		 var indicatorColor=indicator.defaultColors[2];
+		 indicator.setBounds(1100,100,100,80);
+     //set the time duration for seconds
+		 var frame=2000;
+		 var firstTick=true;
+		 var y=indicator.addCategoryAxis("y","handedness"); 
+		 var x=indicator.addMeasureAxis("x","handedness");
+		 x.hidden=true;
+     // add the buttons as bar chart
+		 var s=indicator.addSeries(null,dimple.plot.bar);
+		 var s = indicator.addSeries(null, dimple.plot.bar);
+         s.addEventHandler("click", onClick);
+	     indicator.draw();
+		 y.titleShape.remove();
+		 y.shapes.selectAll("line,path").remove();
+		 y.shapes.selectAll("text")
+                  .style("text-anchor", "start")
+                  .style("font-size", "15px")
+                  .attr("transform", "translate(50, 1)");
+      //addd the data storyboard for chart
+         var bubbles = new dimple.chart(svg, data);
+         bubbles.setBounds(100, 100, 1000, 600);
+      // add x and y axis as HR and avg for each data
+         var x=bubbles.addMeasureAxis("x", "HR");
+         var y=bubbles.addMeasureAxis("y", "AVG");
+      //add z as the radius of circle as weightcount 
+         var z=bubbles.addMeasureAxis("z","weightcount");
+      // aggregateMethod for avg and HR as average for eatch data object
+         var series=new dimple.series(bubbles,["height"],x,y,z,null,dimple.plot.bubble,dimple.aggregateMethod.avg,true);
+         bubbles.series.push(series);
+         bubbles.addLegend(300, 50, 410, 60);
+
+     // add the click event for eatch data
+          var story = bubbles.setStoryboard("handedness", onTick);
+          story.frameDuration = frame;
+          bubbles.draw();
+      //add the onClick envent handle as function 
+		  function onClick(e) {
+              // Pause the animation
+              story.pauseAnimation();
+              // If it is already selected resume the animation
+              // otherwise pause and move to the selected month
+              if (e.yValue === story.getFrameValue()) {
+                  story.startAnimation();
+              } else {
+                  story.goToFrame(e.yValue);
+                  story.pauseAnimation();
+              }
+          }
+
+          // On tick of the main charts storyboard
+          function onTick(e) {
+              if (!firstTick) {
+                  // Color all shapes the same
+                  s.shapes
+                          .transition()
+                          .duration(frame / 2)
+                          .style("fill", function (d) { return (d.y === e ? indicatorColor.fill : defaultColor.fill) })
+                          .style("stroke", function (d) { return (d.y === e ? indicatorColor.stroke : defaultColor.stroke) });
+              }
+              firstTick = false;
+          }
+
+
+
+	};
+	</script>
+</head>
+<body>
+	<script type="text/javascript">
+	d3.csv("baseball.csv",draw);
+	</script>
+</body>
+</html>
